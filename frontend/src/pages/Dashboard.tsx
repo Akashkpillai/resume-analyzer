@@ -17,6 +17,11 @@ interface Resume {
     projects?: any[];
   };
   createdAt: string;
+  links?: {
+    id: string;
+    url: string;
+    type: string;
+  }[];
 }
 
 interface EvaluatedResume {
@@ -545,6 +550,21 @@ const Dashboard = () => {
                             <>@ {resume.parsedData.education[0].institution}</>
                           )}
                         </p>
+                      </div>
+                    )}
+                    {resume.links && resume.links.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {resume.links.slice(0, 3).map((link) => (
+                          <a
+                            key={link.id}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800 transition"
+                          >
+                            {link.type}
+                          </a>
+                        ))}
                       </div>
                     )}
                     <div className="flex justify-between items-center mt-4">

@@ -41,6 +41,11 @@ interface Resume {
     }>;
   };
   rawText: string;
+  links?: {
+    id: string;
+    url: string;
+    type: string;
+  }[];
   createdAt: string;
 }
 
@@ -335,6 +340,38 @@ const ResumeDetail = () => {
                     <span>{resume.parsedData.phone}</span>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Professional Links */}
+          {resume.links && resume.links.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Professional Links</h2>
+              <div className="flex flex-wrap gap-3">
+                {resume.links.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full text-xs">
+                      {link.type}
+                    </span>
+                    <span className="truncate max-w-[180px] sm:max-w-xs">{link.url}</span>
+                    <svg
+                      className="w-4 h-4 text-blue-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 3h7m0 0v7m0-7L10 14" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10v11h11" />
+                    </svg>
+                  </a>
+                ))}
               </div>
             </div>
           )}

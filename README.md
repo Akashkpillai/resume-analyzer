@@ -6,12 +6,13 @@ A comprehensive full-stack web application for analyzing resumes with AI-powered
 
 ### Frontend
 - ✅ React with TypeScript
-- ✅ Upload resumes in PDF format (multiple upload support)
-- ✅ Clean dashboard displaying parsed resume details
-- ✅ Visualizations (skill frequency charts, experience timeline)
-- ✅ Keyword highlighting in raw text
+- ✅ Upload multiple PDF resumes with drag-and-drop
+- ✅ Clean, mobile-responsive dashboard and detailed resume pages
+- ✅ Experience timelines, keyword highlighting, and resume cards
+- ✅ HR requirement filtering (mandatory/optional skills, experience, education)
+- ✅ Professional link detection with clickable badges (LinkedIn, GitHub, etc.)
 - ✅ Search and filter functionality
-- ✅ Responsive design with Tailwind CSS
+- ✅ Global dark/light theme toggle and toast notifications
 - ✅ JWT-based authentication
 
 ### Backend
@@ -23,6 +24,7 @@ A comprehensive full-stack web application for analyzing resumes with AI-powered
 - ✅ JWT authentication
 - ✅ Pagination support
 - ✅ Search and filter by skills/experience
+- ✅ Structured professional link extraction & storage
 
 ### AI Integration
 - ✅ GROQ API integration for intelligent parsing

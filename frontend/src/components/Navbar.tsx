@@ -41,7 +41,7 @@ const Navbar = () => {
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-lg transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between md:h-16">
           <div className="flex items-center space-x-3">
             <Link
               to="/dashboard"
@@ -53,8 +53,8 @@ const Navbar = () => {
               </span>
             </Link>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-700 dark:text-gray-300 font-medium">
+          <div className="flex items-center justify-between gap-3 flex-wrap md:justify-end">
+            <span className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[200px] sm:max-w-sm">
               {user?.name}
             </span>
             <button
