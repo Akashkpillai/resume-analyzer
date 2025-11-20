@@ -17,7 +17,7 @@ A comprehensive full-stack web application for analyzing resumes with AI-powered
 ### Backend
 - ✅ NestJS with TypeScript
 - ✅ RESTful API endpoints
-- ✅ AI-powered resume parsing (OpenAI GPT-3.5 or fallback parsing)
+- ✅ AI-powered resume parsing (GROQ or fallback parsing)
 - ✅ PostgreSQL database with TypeORM
 - ✅ File upload handling (PDF only)
 - ✅ JWT authentication
@@ -25,7 +25,7 @@ A comprehensive full-stack web application for analyzing resumes with AI-powered
 - ✅ Search and filter by skills/experience
 
 ### AI Integration
-- ✅ OpenAI API integration for intelligent parsing
+- ✅ GROQ API integration for intelligent parsing
 - ✅ Fallback regex-based parsing when API key is not available
 - ✅ Extracts: name, email, phone, skills, experience, education, projects
 - ✅ Returns structured JSON data
@@ -50,14 +50,14 @@ A comprehensive full-stack web application for analyzing resumes with AI-powered
 - JWT (Passport)
 - Multer (file uploads)
 - pdf-parse (PDF extraction)
-- OpenAI API
+- GROQ API
 
 ## Prerequisites
 
 - Node.js 18+ and npm
 - Docker and Docker Compose (for containerized setup)
 - PostgreSQL 15+ (if running without Docker)
-- OpenAI API key (optional, for AI parsing)
+- GROQ API key (optional, for AI parsing)
 
 ## Quick Start with Docker
 
@@ -70,7 +70,7 @@ A comprehensive full-stack web application for analyzing resumes with AI-powered
    
    Create a `.env` file in the root directory (optional for Docker, as docker-compose.yml has defaults):
    ```env
-   OPENAI_API_KEY=your-openai-api-key-here
+   GROQ_API_KEY=your-GROQ-api-key-here
    ```
 
 3. **Start all services**
@@ -112,7 +112,7 @@ A comprehensive full-stack web application for analyzing resumes with AI-powered
    DB_PASSWORD=postgres
    DB_NAME=resume_analyzer
    JWT_SECRET=your-super-secret-jwt-key-change-in-production
-   OPENAI_API_KEY=your-openai-api-key-here
+   GROQ_API_KEY=your-GROQ-api-key-here
    PORT=3001
    NODE_ENV=development
    FRONTEND_URL=http://localhost:3000
@@ -269,11 +269,11 @@ resume-analyser/
 
 ## AI Parsing
 
-The application uses OpenAI's GPT-3.5-turbo model to intelligently parse resumes. If an OpenAI API key is not provided, it falls back to basic regex-based parsing.
+The application uses GROQ's GPT-3.5-turbo model to intelligently parse resumes. If an GROQ API key is not provided, it falls back to basic regex-based parsing.
 
 **To enable AI parsing:**
-1. Get an OpenAI API key from https://platform.openai.com/
-2. Add it to your `.env` file as `OPENAI_API_KEY`
+1. Get an GROQ API key from https://platform.GROQ.com/
+2. Add it to your `.env` file as `GROQ_API_KEY`
 
 **What gets extracted:**
 - Personal information (name, email, phone)
@@ -335,7 +335,7 @@ npm run preview      # Preview production build
 - Verify file format (PDF only)
 
 ### AI Parsing Not Working
-- Verify OpenAI API key is set correctly
+- Verify GROQ API key is set correctly
 - Check API key has sufficient credits
 - System will fallback to basic parsing if API fails
 
