@@ -10,7 +10,7 @@ async function bootstrap() {
   // Enable CORS for frontend
   app.enableCors({
     origin: [
-      "https://myresumeapp.vercel.app", // your frontend
+      "https://resume-analyzer-rosy.vercel.app", // your frontend
       "http://localhost:3000",
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
