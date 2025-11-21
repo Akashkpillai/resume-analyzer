@@ -13,6 +13,29 @@ export class ResumeParserService {
     });
   }
 
+  /**
+   * Normalize URL to ensure it has a protocol (https:// or http://)
+   */
+  private normalizeUrl(url: string): string {
+    if (!url) return url;
+    
+    // Remove any whitespace
+    url = url.trim();
+    
+    // If URL already has protocol, return as is
+    if (url.match(/^https?:\/\//i)) {
+      return url;
+    }
+    
+    // If URL starts with //, add https:
+    if (url.startsWith('//')) {
+      return `https:${url}`;
+    }
+    
+    // Otherwise, add https:// prefix
+    return `https://${url}`;
+  }
+
   async extractTextFromFile(filePath: string, fileType: string): Promise<string> {
     try {
       if (fileType === 'application/pdf') {
@@ -64,8 +87,28 @@ export class ResumeParserService {
         "description": "project description",
         "technologies": ["tech1", "tech2"]
       }
+    ],
+    "links": [
+      {
+        "url": "full URL",
+        "type": "LinkedIn/GitHub/Portfolio/Website/Behance/Dribbble/Medium/Blog/Other"
+      }
     ]
   }
+  
+  IMPORTANT: Extract ALL URLs from the resume text. Classify each URL by type:
+  - LinkedIn: linkedin.com URLs
+  - GitHub: github.com URLs
+  - Portfolio: portfolio, personal website, or project showcase URLs
+  - Website: general website URLs
+  - Behance: behance.net URLs
+  - Dribbble: dribbble.com URLs
+  - Medium: medium.com URLs
+  - Blog: blog URLs
+  - Other: any other URLs
+  
+  CRITICAL: All URLs in the "links" array MUST include the full protocol (https:// or http://).
+  For example: "https://linkedin.com/in/username" NOT "linkedin.com/in/username"
   
   Resume text:
   ${text.substring(0, 4000)}`;
@@ -94,7 +137,17 @@ export class ResumeParserService {
       const jsonText = jsonMatch[1] || responseText;
   
       try {
-        return JSON.parse(jsonText);
+        const parsed = JSON.parse(jsonText);
+        
+        // Normalize all URLs in links array
+        if (parsed.links && Array.isArray(parsed.links)) {
+          parsed.links = parsed.links.map((link: any) => ({
+            ...link,
+            url: this.normalizeUrl(link.url || ''),
+          })).filter((link: any) => link.url); // Remove empty URLs
+        }
+        
+        return parsed;
       } catch (parseError) {
         console.error("JSON parse error:", parseError);
         return this.basicParse(text);
@@ -111,9 +164,54 @@ export class ResumeParserService {
     // Basic regex-based parsing as fallback
     const emailRegex = /[\w\.-]+@[\w\.-]+\.\w+/g;
     const phoneRegex = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+    // Match URLs with protocol
+    const urlRegexWithProtocol = /(https?:\/\/[^\s\)]+)/g;
+    // Match URLs without protocol (common domains)
+    const urlRegexWithoutProtocol = /(?:^|\s)((?:www\.)?(?:linkedin\.com|github\.com|behance\.net|dribbble\.com|medium\.com|twitter\.com|x\.com|youtube\.com|instagram\.com|facebook\.com|portfolio|[\w-]+\.(?:com|net|org|io|dev|me|co|edu|gov))[^\s\)]+)/gi;
     
     const emails = text.match(emailRegex) || [];
     const phones = text.match(phoneRegex) || [];
+    
+    // Extract URLs with protocol
+    const urlsWithProtocol = text.match(urlRegexWithProtocol) || [];
+    
+    // Extract URLs without protocol
+    const urlsWithoutProtocol = text.match(urlRegexWithoutProtocol) || [];
+    const normalizedUrlsWithoutProtocol = urlsWithoutProtocol.map(match => {
+      // Remove leading whitespace and clean up
+      return match.trim().replace(/^[:\/]+/, '');
+    });
+
+    // Combine and deduplicate URLs
+    const allUrls = [...new Set([...urlsWithProtocol, ...normalizedUrlsWithoutProtocol])];
+
+    // Extract and classify links
+    const links = allUrls
+      .map((url) => {
+        // Normalize URL to ensure it has protocol
+        const normalizedUrl = this.normalizeUrl(url);
+        const urlLower = normalizedUrl.toLowerCase();
+        let type = 'Website';
+        
+        if (urlLower.includes('linkedin.com')) {
+          type = 'LinkedIn';
+        } else if (urlLower.includes('github.com')) {
+          type = 'GitHub';
+        } else if (urlLower.includes('behance.net')) {
+          type = 'Behance';
+        } else if (urlLower.includes('dribbble.com')) {
+          type = 'Dribbble';
+        } else if (urlLower.includes('medium.com')) {
+          type = 'Medium';
+        } else if (urlLower.includes('portfolio') || urlLower.includes('personal') || urlLower.includes('website')) {
+          type = 'Portfolio';
+        } else if (urlLower.includes('blog')) {
+          type = 'Blog';
+        }
+        
+        return { url: normalizedUrl, type };
+      })
+      .filter((link) => link.url); // Remove empty URLs
 
     // Extract skills (common keywords)
     const skillKeywords = [
@@ -132,6 +230,7 @@ export class ResumeParserService {
       experience: [],
       education: [],
       projects: [],
+      links: links,
     };
   }
 }

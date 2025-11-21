@@ -4,11 +4,9 @@ import Navbar from '../components/Navbar';
 import { resumeApi } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
   Tooltip,
   Legend,
   ResponsiveContainer,
@@ -39,13 +37,12 @@ interface Resume {
       description?: string;
       technologies?: string[];
     }>;
+    links?: Array<{
+      url: string;
+      type: string;
+    }>;
   };
   rawText: string;
-  links?: {
-    id: string;
-    url: string;
-    type: string;
-  }[];
   createdAt: string;
 }
 
@@ -345,33 +342,39 @@ const ResumeDetail = () => {
           )}
 
           {/* Professional Links */}
-          {resume.links && resume.links.length > 0 && (
+          {resume.parsedData?.links && resume.parsedData.links.length > 0 && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Professional Links</h2>
               <div className="flex flex-wrap gap-3">
-                {resume.links.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full text-xs">
-                      {link.type}
-                    </span>
-                    <span className="truncate max-w-[180px] sm:max-w-xs">{link.url}</span>
-                    <svg
-                      className="w-4 h-4 text-blue-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                {resume.parsedData.links.map((link, idx) => {
+                  // Ensure URL has protocol
+                  const normalizedUrl = link.url?.startsWith('http://') || link.url?.startsWith('https://') 
+                    ? link.url 
+                    : `https://${link.url}`;
+                  return (
+                    <a
+                      key={idx}
+                      href={normalizedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 3h7m0 0v7m0-7L10 14" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10v11h11" />
-                    </svg>
-                  </a>
-                ))}
+                      <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full text-xs">
+                        {link.type}
+                      </span>
+                      <span className="truncate max-w-[180px] sm:max-w-xs">{link.url}</span>
+                      <svg
+                        className="w-4 h-4 text-blue-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 3h7m0 0v7m0-7L10 14" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10v11h11" />
+                      </svg>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -442,34 +445,55 @@ const ResumeDetail = () => {
                 })}
               </div>
               {experienceChartData.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Experience Timeline</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={experienceChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="company" />
-                      <YAxis
-                        label={{
-                          value: 'Years',
-                          angle: -90,
-                          position: 'insideLeft',
-                          fill: '#9CA3AF',
-                        }}
-                        tickFormatter={(value) => Number(value).toFixed(1)}
-                      />
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm px-4 pt-4 pb-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                    Experience Breakdown (Years per Company)
+                  </h3>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <PieChart>
                       <Tooltip
-                        formatter={(value: any) => `${Number(value).toFixed(2)} yrs`}
-                        labelFormatter={(label) => `Company: ${label}`}
+                        formatter={(val: any) =>
+                          `${Number(val).toFixed(2)} years`
+                        }
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                        }}
                       />
-                      <Legend />
-                      <Line
-                        type="monotone"
+                      <Legend layout="horizontal" verticalAlign="bottom" />
+                      <Pie
+                        data={experienceChartData}
                         dataKey="years"
-                        stroke="#3B82F6"
-                        name="Years of Experience"
-                        strokeWidth={2}
-                      />
-                    </LineChart>
+                        nameKey="company"
+                        cx="40%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={3}
+                        labelLine={false}
+                        label={(entry: any) =>
+                          `${Number(entry.years).toFixed(1)} yrs`
+                        }
+                      >
+                        {experienceChartData.map((_, index) => {
+                          const COLORS = [
+                            '#3B82F6',
+                            '#10B981',
+                            '#F59E0B',
+                            '#EF4444',
+                            '#6366F1',
+                            '#EC4899',
+                          ];
+                          return (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          );
+                        })}
+                      </Pie>
+                    </PieChart>
                   </ResponsiveContainer>
                 </div>
               )}
