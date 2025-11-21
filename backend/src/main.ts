@@ -9,10 +9,13 @@ async function bootstrap() {
   
   // Enable CORS for frontend
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+      "https://myresumeapp.vercel.app", // your frontend
+      "http://localhost:3000",
+    ],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   });
-
   // Global exception filter for error handling
   app.useGlobalFilters(new AllExceptionsFilter());
 

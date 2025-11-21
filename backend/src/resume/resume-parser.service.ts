@@ -36,12 +36,37 @@ export class ResumeParserService {
     return `https://${url}`;
   }
 
+  sanitizeText(text: string): string {
+    if (!text) {
+      return '';
+    }
+    return text.replace(/\u0000/g, '').replace(/\s+\n/g, '\n').trim();
+  }
+
   async extractTextFromFile(filePath: string, fileType: string): Promise<string> {
     try {
       if (fileType === 'application/pdf') {
         const dataBuffer = fs.readFileSync(filePath);
         const data = await pdfParse(dataBuffer);
-        return data.text;
+        return this.sanitizeText(data.text || '');
+      }
+      throw new Error('Unsupported file type. Please upload a PDF.');
+    } catch (error: any) {
+      if (error?.message?.toLowerCase().includes('unsupported')) {
+        throw new Error('Unsupported file type. Please upload a PDF.');
+      }
+      throw error;
+    }
+  }
+
+  async extractTextFromBuffer(
+    fileBuffer: Buffer,
+    fileType: string,
+  ): Promise<string> {
+    try {
+      if (fileType === 'application/pdf') {
+        const data = await pdfParse(fileBuffer);
+        return this.sanitizeText(data.text || '');
       }
       throw new Error('Unsupported file type. Please upload a PDF.');
     } catch (error: any) {

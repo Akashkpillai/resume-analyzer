@@ -34,16 +34,18 @@ export class ResumeService {
     const filePath = path.join(uploadsDir, fileName);
     fs.writeFileSync(filePath, file.buffer);
 
-    // Extract text
-    const rawText = await this.resumeParserService.extractTextFromFile(
-      filePath,
+    // Extract text from PDF buffer (sanitized)
+    const rawText = await this.resumeParserService.extractTextFromBuffer(
+      file.buffer,
       file.mimetype,
     );
+    const cleanRawText = rawText || '';
 
     // Parse with AI
     const parsedData = await this.resumeParserService.parseResumeWithAI(
-      rawText,
+      cleanRawText,
     );
+    const safeParsedData = JSON.parse(JSON.stringify(parsedData || {}));
 
     // Save to database
     const resume = await this.prisma.resume.create({
@@ -51,8 +53,8 @@ export class ResumeService {
         fileName: file.originalname,
         filePath,
         fileType: file.mimetype,
-        rawText,
-        parsedData: parsedData as any,
+        rawText: cleanRawText,
+        parsedData: safeParsedData as any,
         userId,
       },
     });
