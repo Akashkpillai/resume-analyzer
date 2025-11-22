@@ -12,7 +12,7 @@
 **Option A: Using Blueprint (Easiest)**
 1. Render Dashboard → "New +" → "Blueprint"
 2. Connect your GitHub repo
-3. Render will auto-detect `backend/render.yaml`
+3. Render will auto-detect `render.yaml` in the root directory
 4. Click "Apply"
 
 **Option B: Manual Setup**

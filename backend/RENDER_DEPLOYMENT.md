@@ -30,11 +30,12 @@ This guide will help you deploy your NestJS backend to Render.
 ### 2. Deploy Your Backend Service
 
 #### Method 1: Using render.yaml (Recommended)
-1. The `render.yaml` file is already created in the `backend/` directory
+1. The `render.yaml` file is already created in the **root directory** of your repository
 2. In Render dashboard, click "New +" → "Blueprint"
 3. Connect your GitHub repository
-4. Render will automatically detect the `render.yaml` file
+4. Render will automatically detect the `render.yaml` file in the root
 5. Review the configuration and click "Apply"
+6. The `rootDir: backend` setting tells Render to use the backend directory for the service
 
 #### Method 2: Manual Setup (Node.js Service)
 1. In Render dashboard, click "New +" → "Web Service"
