@@ -14,31 +14,25 @@ export class ResumeParserService {
     });
   }
 
-<<<<<<< HEAD
-  async extractTextFromFile(
-    filePath: string,
-    fileType: string,
-  ): Promise<string> {
-=======
   /**
    * Normalize URL to ensure it has a protocol (https:// or http://)
    */
   private normalizeUrl(url: string): string {
     if (!url) return url;
-    
+
     // Remove any whitespace
     url = url.trim();
-    
+
     // If URL already has protocol, return as is
     if (url.match(/^https?:\/\//i)) {
       return url;
     }
-    
+
     // If URL starts with //, add https:
     if (url.startsWith('//')) {
       return `https:${url}`;
     }
-    
+
     // Otherwise, add https:// prefix
     return `https://${url}`;
   }
@@ -50,8 +44,10 @@ export class ResumeParserService {
     return text.replace(/\u0000/g, '').replace(/\s+\n/g, '\n').trim();
   }
 
-  async extractTextFromFile(filePath: string, fileType: string): Promise<string> {
->>>>>>> 64f38024857cbe148b86a32267b614e1d5600583
+  async extractTextFromFile(
+    filePath: string,
+    fileType: string,
+  ): Promise<string> {
     try {
       if (fileType === 'application/pdf') {
         const dataBuffer = fs.readFileSync(filePath);
@@ -195,18 +191,13 @@ export class ResumeParserService {
   private basicParse(text: string): ParsedResumeData {
     // Basic regex-based parsing as fallback
     const emailRegex = /[\w\.-]+@[\w\.-]+\.\w+/g;
-<<<<<<< HEAD
     const phoneRegex =
       /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
-
-=======
-    const phoneRegex = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
     // Match URLs with protocol
     const urlRegexWithProtocol = /(https?:\/\/[^\s\)]+)/g;
     // Match URLs without protocol (common domains)
-    const urlRegexWithoutProtocol = /(?:^|\s)((?:www\.)?(?:linkedin\.com|github\.com|behance\.net|dribbble\.com|medium\.com|twitter\.com|x\.com|youtube\.com|instagram\.com|facebook\.com|portfolio|[\w-]+\.(?:com|net|org|io|dev|me|co|edu|gov))[^\s\)]+)/gi;
-    
->>>>>>> 64f38024857cbe148b86a32267b614e1d5600583
+    const urlRegexWithoutProtocol =
+      /(?:^|\s)((?:www\.)?(?:linkedin\.com|github\.com|behance\.net|dribbble\.com|medium\.com|twitter\.com|x\.com|youtube\.com|instagram\.com|facebook\.com|portfolio|[\w-]+\.(?:com|net|org|io|dev|me|co|edu|gov))[^\s\)]+)/gi;
     const emails = text.match(emailRegex) || [];
     const phones = text.match(phoneRegex) || [];
     

@@ -26,11 +26,9 @@ export interface ParsedResumeData {
   experience?: ParsedExperience[];
   education?: ParsedEducation[];
   projects?: ParsedProject[];
-  links?: {
-    linkedin?: string;
-    github?: string;
-    portfolio?: string;
-    [key: string]: string | undefined;
-  };
+  links?: Array<{
+    url: string;
+    type: string;
+  }>;
 }
 

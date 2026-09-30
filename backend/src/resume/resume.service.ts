@@ -39,33 +39,17 @@ export class ResumeService {
     const filePath = path.join(uploadsDir, fileName);
     fs.writeFileSync(filePath, file.buffer);
 
-<<<<<<< HEAD
-    // Extract text
-    let rawText = await this.resumeParserService.extractTextFromFile(
-      filePath,
-=======
-    // Extract text from PDF buffer (sanitized)
+    // Extract text from PDF buffer (sanitized in parser)
     const rawText = await this.resumeParserService.extractTextFromBuffer(
       file.buffer,
->>>>>>> 64f38024857cbe148b86a32267b614e1d5600583
       file.mimetype,
     );
     const cleanRawText = rawText || '';
 
-<<<<<<< HEAD
-    // FIX: remove null bytes that break PostgreSQL
-    rawText = rawText.replace(/\u0000/g, '');
-=======
-    // Parse with AI
-    const parsedData = await this.resumeParserService.parseResumeWithAI(
-      cleanRawText,
-    );
-    const safeParsedData = JSON.parse(JSON.stringify(parsedData || {}));
->>>>>>> 64f38024857cbe148b86a32267b614e1d5600583
-
     // AI parsing
     const parsedData =
-      await this.resumeParserService.parseResumeWithAI(rawText);
+      await this.resumeParserService.parseResumeWithAI(cleanRawText);
+    const safeParsedData = JSON.parse(JSON.stringify(parsedData || {}));
 
     // Save to DB
     return this.prisma.resume.create({
@@ -73,13 +57,8 @@ export class ResumeService {
         fileName: sanitizedOriginalName,
         filePath,
         fileType: file.mimetype,
-<<<<<<< HEAD
-        rawText,
-        parsedData: parsedData as unknown as Prisma.JsonValue,
-=======
         rawText: cleanRawText,
-        parsedData: safeParsedData as any,
->>>>>>> 64f38024857cbe148b86a32267b614e1d5600583
+        parsedData: safeParsedData as unknown as Prisma.JsonValue,
         userId,
       },
     });
