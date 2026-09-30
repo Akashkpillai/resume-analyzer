@@ -37,3 +37,4 @@ model Resume {
   @@map("resumes")
 }
 
+

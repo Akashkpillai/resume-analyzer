@@ -13,4 +13,3 @@ declare namespace Express {
     }
   }
 }
-

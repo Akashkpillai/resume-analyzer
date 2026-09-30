@@ -3,8 +3,10 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ResumeParserService } from './resume-parser.service';
+import { ParsedResumeData } from '../types/parsed-resume.interface';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -15,49 +17,52 @@ export class ResumeService {
     private resumeParserService: ResumeParserService,
   ) {}
 
-  async create(
-    file: Express.Multer.File,
-    userId: string,
-  ) {
+  async create(file: Express.Multer.File, userId: string) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
-    // Create uploads directory if it doesn't exist
+    // Create uploads dir if not exists
     const uploadsDir = path.join(process.cwd(), 'uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    // Save file
-    const fileName = `${Date.now()}-${file.originalname}`;
+    // Sanitize filename to prevent path traversal attacks
+    const sanitizedOriginalName = file.originalname
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/\.\./g, '_')
+      .substring(0, 255); // Limit filename length
+
+    // Save file to disk
+    const fileName = `${Date.now()}-${sanitizedOriginalName}`;
     const filePath = path.join(uploadsDir, fileName);
     fs.writeFileSync(filePath, file.buffer);
 
     // Extract text
-    const rawText = await this.resumeParserService.extractTextFromFile(
+    let rawText = await this.resumeParserService.extractTextFromFile(
       filePath,
       file.mimetype,
     );
 
-    // Parse with AI
-    const parsedData = await this.resumeParserService.parseResumeWithAI(
-      rawText,
-    );
+    // FIX: remove null bytes that break PostgreSQL
+    rawText = rawText.replace(/\u0000/g, '');
 
-    // Save to database
-    const resume = await this.prisma.resume.create({
+    // AI parsing
+    const parsedData =
+      await this.resumeParserService.parseResumeWithAI(rawText);
+
+    // Save to DB
+    return this.prisma.resume.create({
       data: {
-        fileName: file.originalname,
+        fileName: sanitizedOriginalName,
         filePath,
         fileType: file.mimetype,
         rawText,
-        parsedData: parsedData as any,
+        parsedData: parsedData as unknown as Prisma.JsonValue,
         userId,
       },
     });
-
-    return resume;
   }
 
   async findAll(
@@ -67,13 +72,45 @@ export class ResumeService {
     search?: string,
     skill?: string,
   ) {
-    const skip = (page - 1) * limit;
     const where: any = { userId };
 
     if (search) {
       where.rawText = { contains: search, mode: 'insensitive' };
     }
 
+    // If skill filter is provided, we need to filter in memory for accurate results
+    // since Prisma's JSONB filtering has limitations with case-insensitive array searches
+    if (skill) {
+      // First, get all resumes matching the base criteria
+      const allResumes = await this.prisma.resume.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Filter by skill (case-insensitive)
+      const skillLower = skill.toLowerCase();
+      const filteredResumes = allResumes.filter((resume) => {
+        const parsedData = resume.parsedData as ParsedResumeData | null;
+        const skills = parsedData?.skills || [];
+        return skills.some((s: string) =>
+          s.toLowerCase().includes(skillLower),
+        );
+      });
+
+      // Apply pagination after filtering
+      const skip = (page - 1) * limit;
+      const paginatedData = filteredResumes.slice(skip, skip + limit);
+
+      return {
+        data: paginatedData,
+        total: filteredResumes.length,
+        page,
+        limit,
+      };
+    }
+
+    // No skill filter - use standard pagination
+    const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
       this.prisma.resume.findMany({
         where,
@@ -84,21 +121,9 @@ export class ResumeService {
       this.prisma.resume.count({ where }),
     ]);
 
-    // Filter by skill if provided
-    let filteredData = data;
-    if (skill) {
-      filteredData = data.filter((resume) => {
-        const parsedData = resume.parsedData as any;
-        const skills = parsedData?.skills || [];
-        return skills.some((s: string) =>
-          s.toLowerCase().includes(skill.toLowerCase()),
-        );
-      });
-    }
-
     return {
-      data: filteredData,
-      total: skill ? filteredData.length : total,
+      data,
+      total,
       page,
       limit,
     };
@@ -118,7 +143,7 @@ export class ResumeService {
 
   async remove(id: string, userId: string): Promise<void> {
     const resume = await this.findOne(id, userId);
-    
+
     // Delete file
     if (fs.existsSync(resume.filePath)) {
       fs.unlinkSync(resume.filePath);
@@ -136,7 +161,7 @@ export class ResumeService {
 
     const skillFrequency: Record<string, number> = {};
     resumes.forEach((resume) => {
-      const parsedData = resume.parsedData as any;
+      const parsedData = resume.parsedData as ParsedResumeData | null;
       const skills = parsedData?.skills || [];
       skills.forEach((skill: string) => {
         skillFrequency[skill] = (skillFrequency[skill] || 0) + 1;
@@ -149,4 +174,3 @@ export class ResumeService {
     };
   }
 }
-

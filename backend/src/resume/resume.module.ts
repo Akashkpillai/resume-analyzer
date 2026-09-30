@@ -8,4 +8,3 @@ import { ResumeParserService } from './resume-parser.service';
   providers: [ResumeService, ResumeParserService],
 })
 export class ResumeModule {}
-

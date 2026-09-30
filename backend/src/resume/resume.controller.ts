@@ -21,6 +21,7 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ResumeService } from './resume.service';
@@ -33,6 +34,7 @@ export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 
   @Post('upload')
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 uploads per minute
   @UseInterceptors(
     FilesInterceptor('files', 20, {
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
@@ -96,8 +98,15 @@ export class ResumeController {
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid file or no file uploaded' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - invalid file or no file uploaded',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or missing token',
+  })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async uploadFile(
     @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
@@ -126,10 +135,30 @@ export class ResumeController {
 
   @Get()
   @ApiOperation({ summary: 'Get all resumes with pagination and filters' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term to filter resumes' })
-  @ApiQuery({ name: 'skill', required: false, type: String, description: 'Filter by skill name' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 10)',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term to filter resumes',
+  })
+  @ApiQuery({
+    name: 'skill',
+    required: false,
+    type: String,
+    description: 'Filter by skill name',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of resumes retrieved successfully',
@@ -154,7 +183,10 @@ export class ResumeController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or missing token',
+  })
   async findAll(
     @Request() req,
     @Query('page') page?: string,
@@ -187,7 +219,10 @@ export class ResumeController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or missing token',
+  })
   async getStats(@Request() req) {
     return this.resumeService.getStats(req.user.userId);
   }
@@ -209,7 +244,10 @@ export class ResumeController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or missing token',
+  })
   @ApiResponse({ status: 404, description: 'Resume not found' })
   async findOne(@Param('id') id: string, @Request() req) {
     return this.resumeService.findOne(id, req.user.userId);
@@ -228,11 +266,13 @@ export class ResumeController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or missing token',
+  })
   @ApiResponse({ status: 404, description: 'Resume not found' })
   async remove(@Param('id') id: string, @Request() req) {
     await this.resumeService.remove(id, req.user.userId);
     return { message: 'Resume deleted successfully' };
   }
 }
-
