@@ -53,7 +53,7 @@ const Toast: React.FC<ToastProps> = ({ id, message, type, duration = 5000 }) => 
 
   return (
     <div
-      className={`${styles[type]} border-l-4 p-4 rounded-lg shadow-lg mb-4 flex items-start animate-slide-in-right`}
+      className={`${styles[type]} border-l-4 p-4 rounded-lg shadow-lg mb-4 flex items-start animate-slide-in`}
       role="alert"
     >
       <div className="flex-shrink-0 mr-3">{icons[type]}</div>
